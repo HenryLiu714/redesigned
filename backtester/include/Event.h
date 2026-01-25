@@ -29,16 +29,10 @@ struct SignalEvent : public Event {
 
 struct OrderEvent : public Event {
     OrderEvent() {type = EventType::ORDER;}
-    std::string ticker;
-    int quantity;
-    double limit_price;
-    Direction direction;
+    std::shared_ptr<Order> order;
 };
 
 struct FillEvent : public Event {
     FillEvent() {type = EventType::FILL;}
-    std::string ticker;
-    int quantity;
-    double fill_price;
-    double commission;
+    std::shared_ptr<Fill> fill;
 };

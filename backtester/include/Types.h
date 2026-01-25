@@ -4,6 +4,7 @@
 
 enum class EventType {MARKET, SIGNAL, ORDER, FILL};
 enum class Direction {SELL, BUY};
+enum class OrderType {MARKET, LIMIT};
 
 struct Bar {
     std::string ticker;
@@ -13,15 +14,17 @@ struct Bar {
 
 struct Fill {
     std::string ticker;
-    int quantity;
+    double quantity;
     double fill_price;
     double commission;
 };
 
 struct Order {
+    OrderType order_type;
     std::string ticker;
+    Direction direction;
     double quantity;
-    double limit_price;
+    double limit_price = 0;
 };
 
 struct Signal {
