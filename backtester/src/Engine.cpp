@@ -4,8 +4,9 @@ Engine::Engine(const EngineConfig& config_, std::shared_ptr<DataHandler> data_ha
     config = config_;
     data_handler = data_handler_;
 
-    execution_handler = std::make_shared<ExecutionHandler>();
-    event_queue = {};
+    execution_handler = std::make_unique<ExecutionHandler>();
+
+    execution_handler->set_context(Context{this});
 }
 
 void Engine::set_config(const EngineConfig& config_) {
@@ -31,21 +32,21 @@ void Engine::run_backtest() {
     // 2. Start backtest
     while (data_handler->has_next()) {
         // Queue should be empty at this point
-        std::shared_ptr<MarketEvent> update = data_handler->next();
+        std::unique_ptr<MarketEvent> update = data_handler->next();
 
-        // 3. Execute any orders
-        execution_handler->on_market_update(update);
+        // // 3. Execute any orders
+        // execution_handler->on_market_update(*update);
 
-        // 4. Call strategy and generate any signals
-        std::vector<std::shared_ptr<Signal>> signals = strategy->on_update(update);
+        // // 4. Call strategy and generate any signals
+        // std::vector<std::shared_ptr<Signal>> signals = strategy->on_update(update);
 
-        // 5. Send signals to portfolio
-        portfolio->on_signals(signals);
+        // // 5. Send signals to portfolio
+        // portfolio->on_signals(signals);
 
-        // 6. Receive any new orders from the portfolio
-        std::vector<std::shared_ptr<Order>> orders = portfolio->send_orders();
+        // // 6. Receive any new orders from the portfolio
+        // std::vector<std::shared_ptr<Order>> orders = portfolio->send_orders();
 
-        // 7. Submit orders to execution handler
-        execution_handler->submit_orders(orders);
+        // // 7. Submit orders to execution handler
+        // execution_handler->submit_orders(orders);
     }
 }

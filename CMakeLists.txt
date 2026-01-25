@@ -24,7 +24,7 @@ enable_testing()
 
 # Add test executable
 add_executable(backtester_tests
-    tests/ExecutionHandlerTest.cpp
+    tests/ExecutionHandlerBehaviorTest.cpp
     tests/EngineTest.cpp
 )
 

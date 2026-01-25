@@ -8,11 +8,13 @@ class DataHandler {
     public:
         virtual bool has_next() = 0;
 
-        virtual std::shared_ptr<MarketEvent> next() = 0;
+        virtual std::unique_ptr<MarketEvent> next() = 0;
+
+        void set_context(Context* context_);
 };
 
 class CustomUniverseDataHandler : public DataHandler {
     public:
         bool has_next();
-        std::shared_ptr<MarketEvent> next();
+        std::unique_ptr<MarketEvent> next();
 };

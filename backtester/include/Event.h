@@ -29,10 +29,10 @@ struct SignalEvent : public Event {
 
 struct OrderEvent : public Event {
     OrderEvent() {type = EventType::ORDER;}
-    std::shared_ptr<Order> order;
+    std::unique_ptr<Order> order;
 };
 
 struct FillEvent : public Event {
     FillEvent() {type = EventType::FILL;}
-    std::shared_ptr<Fill> fill;
+    std::unique_ptr<Fill> fill;
 };
