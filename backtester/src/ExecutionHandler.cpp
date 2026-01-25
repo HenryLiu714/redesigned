@@ -70,6 +70,6 @@ std::vector<std::shared_ptr<Fill>> ExecutionHandler::on_market_update(std::share
     return fills;
 }
 
-void ExecutionHandler::submit_order(std::shared_ptr<Order> order) {
-    pending_orders.push_back(order);
+void ExecutionHandler::submit_orders(const std::vector<std::shared_ptr<Order>>& orders) {
+    pending_orders.insert(pending_orders.end(), orders.begin(), orders.end());
 }

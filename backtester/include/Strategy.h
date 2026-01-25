@@ -8,9 +8,6 @@ class Strategy {
 
         virtual void on_start();
 
-        // Called on universe update
-        virtual void on_update(const MarketEvent& event);
-
-        // Send signal
-        void send_signals(const std::vector<Signal>& signals);
+        // Called on universe update, returns any signals
+        virtual std::vector<std::shared_ptr<Signal>> on_update(std::shared_ptr<MarketEvent> event);
 };

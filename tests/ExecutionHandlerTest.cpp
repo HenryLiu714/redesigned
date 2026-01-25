@@ -7,6 +7,14 @@ protected:
 
     ExecutionHandler handler;
 
+    void submit(const std::shared_ptr<Order>& order) {
+        handler.submit_orders({order});
+    }
+
+    void submit(const std::vector<std::shared_ptr<Order>>& orders) {
+        handler.submit_orders(orders);
+    }
+
     // Helper to create a market event with a bar
     std::shared_ptr<MarketEvent> createMarketEvent(
         const std::string& ticker, double open, double high, double low, double close, double volume = 1000) {
@@ -44,7 +52,7 @@ protected:
 
 TEST_F(ExecutionHandlerTest, MarketOrder_BuyExecutesAtOpenPrice) {
     auto order = createMarketOrder("AAPL", Direction::BUY, 100);
-    handler.submit_order(order);
+    submit(order);
 
     auto market_event = createMarketEvent("AAPL", 150.0, 155.0, 148.0, 152.0);
     auto fills = handler.on_market_update(market_event);
@@ -58,7 +66,7 @@ TEST_F(ExecutionHandlerTest, MarketOrder_BuyExecutesAtOpenPrice) {
 
 TEST_F(ExecutionHandlerTest, MarketOrder_SellExecutesAtOpenPrice) {
     auto order = createMarketOrder("AAPL", Direction::SELL, 50);
-    handler.submit_order(order);
+    submit(order);
 
     auto market_event = createMarketEvent("AAPL", 200.0, 205.0, 198.0, 202.0);
     auto fills = handler.on_market_update(market_event);
@@ -72,8 +80,7 @@ TEST_F(ExecutionHandlerTest, MarketOrder_SellExecutesAtOpenPrice) {
 TEST_F(ExecutionHandlerTest, MarketOrder_MultipleOrdersInSingleUpdate) {
     auto order1 = createMarketOrder("AAPL", Direction::BUY, 100);
     auto order2 = createMarketOrder("MSFT", Direction::SELL, 50);
-    handler.submit_order(order1);
-    handler.submit_order(order2);
+    submit({order1, order2});
 
     auto market_event = std::make_shared<MarketEvent>();
     market_event->bars["AAPL"] = Bar{"AAPL", 0, 150.0, 155.0, 148.0, 152.0, 1000};
@@ -90,7 +97,7 @@ TEST_F(ExecutionHandlerTest, MarketOrder_MultipleOrdersInSingleUpdate) {
 
 TEST_F(ExecutionHandlerTest, LimitOrder_BuyExecutesWhenPriceDropsBelowLimit) {
     auto order = createLimitOrder("AAPL", Direction::BUY, 100, 148.0);
-    handler.submit_order(order);
+    submit(order);
 
     // bar low is 145, which is below limit of 148
     auto market_event = createMarketEvent("AAPL", 150.0, 155.0, 145.0, 152.0);
@@ -102,7 +109,7 @@ TEST_F(ExecutionHandlerTest, LimitOrder_BuyExecutesWhenPriceDropsBelowLimit) {
 
 TEST_F(ExecutionHandlerTest, LimitOrder_BuyDoesNotExecuteWhenPriceAboveLimit) {
     auto order = createLimitOrder("AAPL", Direction::BUY, 100, 145.0);
-    handler.submit_order(order);
+    submit(order);
 
     // bar low is 148, which is above limit of 145
     auto market_event = createMarketEvent("AAPL", 150.0, 155.0, 148.0, 152.0);
@@ -114,7 +121,7 @@ TEST_F(ExecutionHandlerTest, LimitOrder_BuyDoesNotExecuteWhenPriceAboveLimit) {
 
 TEST_F(ExecutionHandlerTest, LimitOrder_BuyExecutesAtExactLimit) {
     auto order = createLimitOrder("AAPL", Direction::BUY, 100, 148.0);
-    handler.submit_order(order);
+    submit(order);
 
     auto market_event = createMarketEvent("AAPL", 150.0, 155.0, 148.0, 152.0);
     auto fills = handler.on_market_update(market_event);
@@ -125,7 +132,7 @@ TEST_F(ExecutionHandlerTest, LimitOrder_BuyExecutesAtExactLimit) {
 
 TEST_F(ExecutionHandlerTest, LimitOrder_SellExecutesWhenPriceRisesAboveLimit) {
     auto order = createLimitOrder("AAPL", Direction::SELL, 100, 155.0);
-    handler.submit_order(order);
+    submit(order);
 
     // bar high is 158, which is above limit of 155
     auto market_event = createMarketEvent("AAPL", 150.0, 158.0, 145.0, 152.0);
@@ -137,7 +144,7 @@ TEST_F(ExecutionHandlerTest, LimitOrder_SellExecutesWhenPriceRisesAboveLimit) {
 
 TEST_F(ExecutionHandlerTest, LimitOrder_SellDoesNotExecuteWhenPriceBelowLimit) {
     auto order = createLimitOrder("AAPL", Direction::SELL, 100, 155.0);
-    handler.submit_order(order);
+    submit(order);
 
     // bar high is 152, which is below limit of 155
     auto market_event = createMarketEvent("AAPL", 150.0, 152.0, 145.0, 152.0);
@@ -149,7 +156,7 @@ TEST_F(ExecutionHandlerTest, LimitOrder_SellDoesNotExecuteWhenPriceBelowLimit) {
 
 TEST_F(ExecutionHandlerTest, LimitOrder_SellExecutesAtExactLimit) {
     auto order = createLimitOrder("AAPL", Direction::SELL, 100, 155.0);
-    handler.submit_order(order);
+    submit(order);
 
     auto market_event = createMarketEvent("AAPL", 150.0, 155.0, 145.0, 152.0);
     auto fills = handler.on_market_update(market_event);
@@ -162,7 +169,7 @@ TEST_F(ExecutionHandlerTest, LimitOrder_SellExecutesAtExactLimit) {
 
 TEST_F(ExecutionHandlerTest, OrderNotExecuted_TickerNotInMarketUpdate) {
     auto order = createMarketOrder("AAPL", Direction::BUY, 100);
-    handler.submit_order(order);
+    submit(order);
 
     auto market_event = createMarketEvent("MSFT", 200.0, 205.0, 198.0, 202.0);
     auto fills = handler.on_market_update(market_event);
@@ -183,7 +190,7 @@ TEST_F(ExecutionHandlerTest, NoOrdersSubmitted) {
 
 TEST_F(ExecutionHandlerTest, EmptyMarketUpdate) {
     auto order = createMarketOrder("AAPL", Direction::BUY, 100);
-    handler.submit_order(order);
+    submit(order);
 
     auto market_event = std::make_shared<MarketEvent>();
     auto fills = handler.on_market_update(market_event);
@@ -195,8 +202,7 @@ TEST_F(ExecutionHandlerTest, EmptyMarketUpdate) {
 TEST_F(ExecutionHandlerTest, SubmitMultipleOrdersSameTicketDifferentLimits) {
     auto order1 = createLimitOrder("AAPL", Direction::BUY, 100, 140.0);
     auto order2 = createLimitOrder("AAPL", Direction::BUY, 50, 150.0);
-    handler.submit_order(order1);
-    handler.submit_order(order2);
+    submit({order1, order2});
 
     auto market_event = createMarketEvent("AAPL", 150.0, 155.0, 145.0, 152.0);
     auto fills = handler.on_market_update(market_event);
@@ -208,7 +214,7 @@ TEST_F(ExecutionHandlerTest, SubmitMultipleOrdersSameTicketDifferentLimits) {
 
 TEST_F(ExecutionHandlerTest, VerySmallQuantities) {
     auto order = createMarketOrder("AAPL", Direction::BUY, 0.1);
-    handler.submit_order(order);
+    submit(order);
 
     auto market_event = createMarketEvent("AAPL", 150.0, 155.0, 148.0, 152.0);
     auto fills = handler.on_market_update(market_event);
@@ -219,7 +225,7 @@ TEST_F(ExecutionHandlerTest, VerySmallQuantities) {
 
 TEST_F(ExecutionHandlerTest, VeryLargeQuantities) {
     auto order = createMarketOrder("AAPL", Direction::BUY, 1000000);
-    handler.submit_order(order);
+    submit(order);
 
     auto market_event = createMarketEvent("AAPL", 150.0, 155.0, 148.0, 152.0);
     auto fills = handler.on_market_update(market_event);
@@ -230,7 +236,7 @@ TEST_F(ExecutionHandlerTest, VeryLargeQuantities) {
 
 TEST_F(ExecutionHandlerTest, VerySmallPrices) {
     auto order = createMarketOrder("PENNY", Direction::BUY, 100);
-    handler.submit_order(order);
+    submit(order);
 
     auto market_event = createMarketEvent("PENNY", 0.001, 0.002, 0.0005, 0.0015);
     auto fills = handler.on_market_update(market_event);
@@ -241,7 +247,7 @@ TEST_F(ExecutionHandlerTest, VerySmallPrices) {
 
 TEST_F(ExecutionHandlerTest, VeryLargePrices) {
     auto order = createMarketOrder("EXPENSIVE", Direction::BUY, 1);
-    handler.submit_order(order);
+    submit(order);
 
     auto market_event = createMarketEvent("EXPENSIVE", 10000.0, 10100.0, 9900.0, 10050.0);
     auto fills = handler.on_market_update(market_event);
@@ -254,7 +260,7 @@ TEST_F(ExecutionHandlerTest, VeryLargePrices) {
 
 TEST_F(ExecutionHandlerTest, FillContainsCorrectCommission) {
     auto order = createMarketOrder("AAPL", Direction::BUY, 100);
-    handler.submit_order(order);
+    submit(order);
 
     auto market_event = createMarketEvent("AAPL", 150.0, 155.0, 148.0, 152.0);
     auto fills = handler.on_market_update(market_event);
@@ -268,7 +274,7 @@ TEST_F(ExecutionHandlerTest, FillContainsCorrectCommission) {
 TEST_F(ExecutionHandlerTest, CustomCommissionRate) {
     ExecutionHandler handler_custom(0.0005, 0.5);
     auto order = createMarketOrder("AAPL", Direction::BUY, 100);
-    handler_custom.submit_order(order);
+    handler_custom.submit_orders({order});
 
     auto market_event = createMarketEvent("AAPL", 150.0, 155.0, 148.0, 152.0);
     auto fills = handler_custom.on_market_update(market_event);
