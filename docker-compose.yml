@@ -1,0 +1,42 @@
+version: '3.8'
+services:
+  trading-infra:
+    build: .
+    container_name: trading-infra
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: python3 run.py
+    # Uncomment and configure if you need to link to a database
+    # depends_on:
+    #   - db
+    # ports:
+    #   - "8000:8000"
+    networks:
+      - global-link
+
+# Example for a Postgres service (uncomment if needed)
+#  db:
+#    image: postgres:13
+#    environment:
+#      POSTGRES_USER: youruser
+#      POSTGRES_PASSWORD: yourpassword
+#      POSTGRES_DB: trading
+#    ports:
+#      - "5432:5432"
+#    volumes:
+#      - pgdata:/var/lib/postgresql/data
+#    networks:
+#      - trading-net
+
+#volumes:
+#  pgdata:
+
+networks:
+  # This tells Docker to use the network that already exists
+  global-link:
+    external: true
