@@ -13,10 +13,10 @@ sys.path.insert(0, str(project_root))
 
 # Now we can import from src
 from src.Engine import Engine
-from src.Strategy import Strategy
+from src.Strategy import SniperStrategy
 from src.Portfolio import Portfolio
 from src.Alert import send_alert
-
+from src.Events import MarketEvent
 
 def main():
     """Run the trading engine."""
@@ -24,11 +24,11 @@ def main():
 
     engine = Engine()
 
-    strategy = Strategy("Testing Strategy")
+    strategy = SniperStrategy()
     portfolio = Portfolio()
 
-    engine.strategy = strategy
-    engine.portfolio = portfolio
+    engine.set_strategy(strategy)
+    engine.set_portfolio(portfolio)
 
     engine.run()
 

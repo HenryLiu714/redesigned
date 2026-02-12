@@ -1,5 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel, Field
+from datetime import datetime
 
 class EventType(str, Enum):
     MARKET = "MARKET"
@@ -33,6 +34,7 @@ class Position(BaseModel):
     position_id: str
     quantity: float
     entry_price: float
+    entry_time: datetime = None
 
 class Fill(BaseModel):
     symbol: str
@@ -53,4 +55,4 @@ class Order(BaseModel):
 class Signal(BaseModel):
     strategy_id: str
     symbol: str
-    value: float
+    value: float = 0 # Optional field to represent strength of signal, can be used for position sizing

@@ -13,6 +13,7 @@ from .models import (
     Fill,
     Order,
     Position,
+    Universe,
     OrderStatus
 )
 
@@ -38,7 +39,19 @@ from .operations import (
     get_positions_by_status,
     update_position,
     delete_position,
-    get_open_positions
+    get_open_positions,
+
+    # Universe operations
+    create_universe,
+    get_universe_by_snapshot_id,
+    get_universe_by_week,
+    get_active_universe,
+    get_universe_by_symbol,
+    update_universe_status,
+    delete_universe,
+
+    # Generic table operations
+    get_latest_entries
 )
 
 __all__ = [
@@ -54,6 +67,7 @@ __all__ = [
     "Fill",
     "Order",
     "Position",
+    "Universe",
     "OrderStatus",
 
 
@@ -78,5 +92,17 @@ __all__ = [
     "get_positions_by_status",
     "update_position",
     "delete_position",
-    "get_open_positions"
+    "get_open_positions",
+
+    # Universe operations
+    "create_universe",
+    "get_universe_by_snapshot_id",
+    "get_universe_by_week",
+    "get_active_universe",
+    "get_universe_by_symbol",
+    "update_universe_status",
+    "delete_universe",
+
+    # Generic table operations
+    "get_latest_entries"
 ]

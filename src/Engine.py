@@ -62,12 +62,11 @@ class Engine(EventSink):
 
     def set_strategy(self, strategy: Strategy):
         self.strategy = strategy
-        self.strategy.set_context(Context(event_sink=self))
+        self.strategy.set_context(Context(event_sink=self, trading_client=self.trading_client))
 
     def set_portfolio(self, portfolio: Portfolio):
         self.portfolio = portfolio
-        self.portfolio.set_context(Context(event_sink=self))
-
+        self.portfolio.set_context(Context(event_sink=self, trading_client=self.trading_client))
     async def handle_trading_stream_updates(self, data):
         try:
             if data.event == "new":
@@ -76,12 +75,21 @@ class Engine(EventSink):
                 send_alert(f"New order event received from trading stream. \n {data.order.symbol} {data.order.qty} @ {data.order.limit_price if data.order.limit_price else 'MKT'}")
 
             elif data.event == "fill" or data.event == "partial_fill":
+                raw_side = data.order.side.upper()
+                side_map = {
+                    "BUY": "LONG",
+                    "SELL": "SHORT",
+                    "LONG": "LONG",
+                    "SHORT": "SHORT"
+                }
+                normalized_side = side_map.get(raw_side, raw_side)
+
                 event = FillEvent(
-                    timestamp=data.timestamp,
+                    timestamp=data.timestamp.timestamp() if hasattr(data.timestamp, "timestamp") else float(data.timestamp),
                     fill=Fill(
                         symbol=data.order.symbol,
                         quantity=float(data.qty),
-                        side=data.order.side.upper(),
+                        side=normalized_side,
                         fill_price=float(data.price),
                         commission=0.0 # Alpaca does not provide commission data
                     )
@@ -90,11 +98,10 @@ class Engine(EventSink):
                 # TODO: Move to portfolio
                 create_fill(order_id=data.order.id, quantity=float(data.qty), price=float(data.price), filled_at=data.timestamp)
 
-                send_alert(f"New fill event received from trading stream. \n {data.order.symbol} {data.qty} @ {data.price}")
-
                 self.handle_update(event)
 
         except Exception as e:
+            print(f"Error processing trading stream update: {str(e)}")
             send_alert(f"Error processing trading stream update: {str(e)}")
 
     def handle_update(self, event: Event):
@@ -105,15 +112,21 @@ class Engine(EventSink):
         while self.event_queue:
             current_event = self.event_queue.pop(0)
 
-            if current_event.type == EventType.MARKET:
+            if current_event.event_type == EventType.MARKET:
                 self.strategy.on_update(current_event)
-            elif current_event.type == EventType.SIGNAL:
-                self.portfolio.on_signal(current_event)
-            elif current_event.type == EventType.ORDER:
-                self.execution_handler.execute_order(current_event)
-            elif current_event.type == EventType.FILL:
-                self.portfolio.on_fill(current_event)
+                self.portfolio.on_market_update(current_event)
+            elif current_event.event_type == EventType.SIGNAL:
+                send_alert(f"{current_event.signal.strategy_id}: {current_event.signal.symbol} @ {current_event.signal.value}")
+                self.portfolio.on_signal(current_event.signal)
+            elif current_event.event_type == EventType.ORDER:
+                send_alert(f"New order submitted. \n {current_event.order.symbol} {current_event.order.quantity} @ {current_event.order.price if current_event.order.price else 'MKT'}")
+                self.execution_handler.execute_order(current_event.order)
+            elif current_event.event_type == EventType.FILL:
+                send_alert(f"New fill received. \n {current_event.fill.symbol} {current_event.fill.quantity} @ {current_event.fill.fill_price}")
+                self.portfolio.on_fill(current_event.fill)
 
     def run(self):
+        self.generate_market_open_event()
+
         self.schedule_tasks()
         self.trading_stream.run()

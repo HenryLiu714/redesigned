@@ -1,6 +1,6 @@
 """SQLAlchemy models for trading schema tables."""
 
-from sqlalchemy import Column, Integer, String, Numeric, DateTime, Enum, Text, text
+from sqlalchemy import Column, Integer, String, Numeric, DateTime, Date, Boolean, Enum, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from datetime import datetime
 import enum
@@ -128,4 +128,32 @@ class Position(Base):
             "commission_close": float(self.commission_close) if self.commission_close else None,
             "tags": self.tags,
             "notes": self.notes
+        }
+
+
+class Universe(Base):
+    """Model for trading.universe table."""
+    __tablename__ = "universe"
+    __table_args__ = {"schema": "trading"}
+
+    snapshot_id = Column(Integer, primary_key=True, autoincrement=True)
+    week_start_date = Column(Date, nullable=False)
+    symbol = Column(String(12), nullable=False)
+    is_active = Column(Boolean, nullable=True, server_default=text("TRUE"))
+    price_source_table = Column(String, nullable=True)
+
+    def __repr__(self):
+        return (
+            f"<Universe(snapshot_id={self.snapshot_id}, week_start_date={self.week_start_date}, "
+            f"symbol='{self.symbol}', is_active={self.is_active}, price_source_table='{self.price_source_table}')>"
+        )
+
+    def to_dict(self):
+        """Convert model to dictionary."""
+        return {
+            "snapshot_id": self.snapshot_id,
+            "week_start_date": self.week_start_date.isoformat() if self.week_start_date else None,
+            "symbol": self.symbol,
+            "is_active": self.is_active,
+            "price_source_table": self.price_source_table
         }

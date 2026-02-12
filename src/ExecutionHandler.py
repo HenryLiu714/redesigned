@@ -43,10 +43,10 @@ class ExecutionHandler(object):
                 limit_order_data = LimitOrderRequest(
                     symbol=order.symbol,
                     qty=order.quantity,
-                    side=OrderSide.BUY if order.side == Direction.LONG else OrderSide.SELL,
+                    side=OrderSide.BUY if order.direction == Direction.LONG else OrderSide.SELL,
                     time_in_force=TimeInForce.DAY, # Limit orders only valid for the day
-                    limit_price=order.limit_price,
-                    position_intent = POSITION_INTENT_MAP.get((order.side, order.order_intent))
+                    limit_price=order.price,
+                    position_intent = POSITION_INTENT_MAP.get((order.direction, order.order_intent))
                 )
 
                 order_response = self.trading_client.submit_order(

@@ -1,9 +1,11 @@
 from pydantic import BaseModel
 from src.Types import *
 
+from datetime import datetime
+
 class Event(BaseModel):
     event_type: str
-    timestamp: float
+    timestamp: float = datetime.now().timestamp()
 
 class MarketEvent(Event):
     event_type: str = "MARKET"
